@@ -8,7 +8,8 @@ The [Python script](./maxscale/main.py) will demonstrate how multiple database s
 
 **BEFORE PROCEEDING**: The following will be done on Ubuntu 18.04.
 
-Installing Docker can be found [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04). If you're on a different OS or version, please look for another guide before proceeding.
+Installing Docker:
+A guide can be found [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04). If you're on a different OS or version, please look for another guide before proceeding.
 
 Installing Docker Compose:
 ```
@@ -21,7 +22,7 @@ sudo apt install python3-pip
 pip3 install mysql-connector
 ```
 
-**BEFORE PROCEEDING**: The MaxScale container must have been started or stopped before running the following command. Skip to the [MaxScale Docker-Compose Setup]() section and return to step 1 once you have the Docker-Compose up.
+**BEFORE PROCEEDING**: The MaxScale container must have been started or stopped before running the following command. Skip to the [MaxScale Docker-Compose Setup](https://github.com/6ri4n/maxscale-docker#maxscale-docker-compose-setup) section and return to step 1 once you have the Docker-Compose up.
 
 Editing the Python script to contain the correct ip address of the MaxScale container:
 
@@ -54,14 +55,14 @@ A JSON object will be returned, here's part of it:
 
 2. Look for the following JSON property **"IPAddress": "172.18.0.5"** near the bottom and take note of the ip address. This is the IP address that you will insert into the Python script.
 
-3. Navigate to the [maxscale](./maxscale/) directory if aren't in it already.
+3. Navigate to the [maxscale](./maxscale/) directory if you aren't in it already.
 
-4. Use a text editor (nano in this example) to edit the main.py file located in the current directory.
+4. Use a text editor to edit the main.py file located in the current directory.
 ```
 nano main.py
 ```
 
-5. Replacing ??? with the proper ip address from step 2. Save your changes and exit from the text editor (CTRL + O and CTRL + X).
+5. Replacing ??? with the proper ip address from step 2. Save your changes and exit from the text editor.
 
 ## MaxScale Docker-Compose Setup
 
@@ -98,7 +99,7 @@ docker-compose down -v
 
 ## Running
 
-**BEFORE PROCEEDING**: Everything in the [Configuration]() section must have been completed.
+**BEFORE PROCEEDING**: Everything in the [Configuration](https://github.com/6ri4n/maxscale-docker#configuration) section must have been completed.
 
 The purpose of the Python script is to interact with and query the sharded database created using Docker Compose.
 
@@ -144,5 +145,4 @@ output
 4. Find the smallest zipcode value in the zipcodes_two shard.
 
 output
-
 ```
