@@ -1,18 +1,18 @@
 [server1]
 type=server
-address=master
+address=primary
 port=3306
 protocol=MariaDBBackend
 
 [server2]
 type=server
-address=slave1
+address=replica1
 port=3306
 protocol=MariaDBBackend
 
 [server3]
 type=server
-address=slave2
+address=replica2
 port=3306
 protocol=MariaDBBackend
 
