@@ -1,90 +1,148 @@
-# MariaDB MaxScale Docker image
+# Project: Database Sharding
 
-This Docker image runs the latest 2.4 version of MariaDB MaxScale.
+The purpose of this project is to build a scalable and efficient database solution using horizontal sharding and Docker. The project will utilize Docker Compose to create and manage the MaxScale container as the database proxy and MariaDB containers that make up the sharded database.
 
--	[Travis CI:  
-	![build status badge](https://img.shields.io/travis/mariadb-corporation/maxscale-docker/master.svg)](https://travis-ci.org/mariadb-corporation/maxscale-docker/branches)
+The [Python script](./maxscale/main.py) will demonstrate how multiple database shards can be queried as if the sharded database was a single database, allowing for improved performance and reliability as the volume of data grows.
 
-## Running
-[The MaxScale docker-compose setup](./docker-compose.yml) contains MaxScale
-configured with a three node master-slave cluster. To start it, run the
-following commands in this directory.
+## Configuration
 
+**BEFORE PROCEEDING**: The following will be done on Ubuntu 18.04.
+
+Installing Docker can be found [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04). If you're on a different OS or version, please look for another guide before proceeding.
+
+Installing Docker Compose:
 ```
-docker-compose build
+sudo apt install docker-compose
+```
+
+Installing MySQL Connector package:
+```
+sudo apt install python3-pip
+pip3 install mysql-connector
+```
+
+**BEFORE PROCEEDING**: The MaxScale container must have been started or stopped before running the following command. Skip to the [MaxScale Docker-Compose Setup]() section and return to step 1 once you have the Docker-Compose up.
+
+Editing the Python script to contain the correct ip address of the MaxScale container:
+
+1. Identifying the ip address of the MaxScale container:
+```
+docker inspect maxscale_maxscale_1
+```
+
+A JSON object will be returned, here's part of it:
+```
+"maxscale_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "223e917119b5",
+                        "maxscale"
+                    ],
+                    "NetworkID": "63196d15cb1a34715db7897067b7432b52e172961fc7929df850159ebe52144d",
+                    "EndpointID": "019f17c980d55f6a7f4ec07750b12e46804a99a5d0dbf1f323d06f1a78bd17be",
+                    "Gateway": "172.18.0.1",
+                    "IPAddress": "172.18.0.5",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:12:00:05",
+                    "DriverOpts": null
+                }
+```
+
+2. Look for the following JSON property **"IPAddress": "172.18.0.5"** near the bottom and take note of the ip address. This is the IP address that you will insert into the Python script.
+
+3. Navigate to the [maxscale](./maxscale/) directory if aren't in it already.
+
+4. Use a text editor (nano in this example) to edit the main.py file located in the current directory.
+```
+nano main.py
+```
+
+5. Replacing ??? with the proper ip address from step 2. Save your changes and exit from the text editor (CTRL + O and CTRL + X).
+
+## MaxScale Docker-Compose Setup
+
+The [MaxScale docker-compose](./maxscale/docker-compose.yml) setup contains MaxScale
+configured with a three node primary-replica cluster. 
+
+**BEFORE PROCEEDING**: The following commands assume the user is in the docker group, if not, use "**sudo**" before each command.
+
+The following commands should be executed within [this directory](./maxscale/):
+
+Starting MaxScale with its primary-replica cluster:
+```
 docker-compose up -d
 ```
 
-After MaxScale and the servers have started (takes a few minutes), you can find
-the readwritesplit router on port 4006 and the readconnroute on port 4008. The
-user `maxuser` with the password `maxpwd` can be used to test the cluster.
-Assuming the mariadb client is installed on the host machine:
-```
-$ mysql -umaxuser -pmaxpwd -h 127.0.0.1 -P 4006 test
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
-Your MySQL connection id is 5
-Server version: 10.2.12 2.2.9-maxscale mariadb.org binary distribution
-
-Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-MySQL [test]>
-```
-You can edit the [`maxscale.cnf.d/example.cnf`](./maxscale.cnf.d/example.cnf)
-file and recreate the MaxScale container to change the configuration.
-
-To stop the containers, execute the following command. Optionally, use the -v
-flag to also remove the volumes.
-
-To run maxctrl in the container to see the status of the cluster:
+Viewing the status of the cluster:
 ```
 $ docker-compose exec maxscale maxctrl list servers
-┌─────────┬─────────┬──────┬─────────────┬─────────────────┬──────────┐
-│ Server  │ Address │ Port │ Connections │ State           │ GTID     │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼──────────┤
-│ server1 │ master  │ 3306 │ 0           │ Master, Running │ 0-3000-5 │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼──────────┤
-│ server2 │ slave1  │ 3306 │ 0           │ Slave, Running  │ 0-3000-5 │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼──────────┤
-│ server3 │ slave2  │ 3306 │ 0           │ Running         │ 0-3000-5 │
-└─────────┴─────────┴──────┴─────────────┴─────────────────┴──────────┘
-
+┌─────────┬──────────┬──────┬─────────────┬─────────────────┬──────────┬─────────────────┐
+│ Server  │ Address  │ Port │ Connections │ State           │ GTID     │ Monitor         │
+├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
+│ server1 │ primary  │ 3306 │ 0           │ Master, Running │ 0-3000-5 │ MariaDB-Monitor │
+├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
+│ server2 │ replica1 │ 3306 │ 0           │ Slave, Running  │ 0-3000-5 │ MariaDB-Monitor │
+├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
+│ server3 │ replica2 │ 3306 │ 0           │ Slave, Running  │ 0-3000-5 │ MariaDB-Monitor │
+└─────────┴──────────┴──────┴─────────────┴─────────────────┴──────────┴─────────────────┘
 ```
 
-The cluster is configured to utilize automatic failover. To illustrate this you can stop the master
-container and watch for maxscale to failover to one of the original slaves and then show it rejoining
-after recovery:
-```
-$ docker-compose stop master
-Stopping maxscaledocker_master_1 ... done
-$ docker-compose exec maxscale maxctrl list servers
-┌─────────┬─────────┬──────┬─────────────┬─────────────────┬─────────────┐
-│ Server  │ Address │ Port │ Connections │ State           │ GTID        │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server1 │ master  │ 3306 │ 0           │ Down            │ 0-3000-5    │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server2 │ slave1  │ 3306 │ 0           │ Master, Running │ 0-3001-7127 │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server3 │ slave2  │ 3306 │ 0           │ Slave, Running  │ 0-3001-7127 │
-└─────────┴─────────┴──────┴─────────────┴─────────────────┴─────────────┘
-$ docker-compose start master
-Starting master ... done
-$ docker-compose exec maxscale maxctrl list servers
-┌─────────┬─────────┬──────┬─────────────┬─────────────────┬─────────────┐
-│ Server  │ Address │ Port │ Connections │ State           │ GTID        │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server1 │ master  │ 3306 │ 0           │ Slave, Running  │ 0-3001-7127 │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server2 │ slave1  │ 3306 │ 0           │ Master, Running │ 0-3001-7127 │
-├─────────┼─────────┼──────┼─────────────┼─────────────────┼─────────────┤
-│ server3 │ slave2  │ 3306 │ 0           │ Slave, Running  │ 0-3001-7127 │
-└─────────┴─────────┴──────┴─────────────┴─────────────────┴─────────────┘
-
-```
-
-Once complete, to remove the cluster and maxscale containers:
-
+Removing MaxScale and its cluster containers:
 ```
 docker-compose down -v
+```
+
+## Running
+
+**BEFORE PROCEEDING**: Everything in the [Configuration]() section must have been completed.
+
+The purpose of the Python script is to interact with and query the sharded database created using Docker Compose.
+
+The following command should be executed within [this directory](./maxscale/):
+
+Running the Python script:
+```
+python3 main.py
+```
+
+Output from the script:
+```
+1. Retrieve the last 10 rows of data from the zipcodes_one shard.
+
+output
+output
+output
+output
+output
+output
+output
+output
+output
+output
+
+2. Obtain the first 10 rows of data from the zipcodes_two shard.
+
+output
+output
+output
+output
+output
+output
+output
+output
+output
+output
+
+3. Determine the largest zipcode value in the zipcodes_one shard.
+
+output
+
+4. Find the smallest zipcode value in the zipcodes_two shard.
+
+output
+
 ```
