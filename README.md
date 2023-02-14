@@ -125,7 +125,7 @@ output
 output
 output
 
-2. Obtain the first 10 rows of data from the zipcodes_two shard.
+2. Retrieve the first 10 rows of data from the zipcodes_two shard.
 
 output
 output
@@ -138,7 +138,7 @@ output
 output
 output
 
-3. Determine the largest zipcode value in the zipcodes_one shard.
+3. Find the largest zipcode value in the zipcodes_one shard.
 
 output
 
