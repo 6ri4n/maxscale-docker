@@ -20,24 +20,11 @@ services:
         ports:
             - "4002:3306"
 
-    replica1:
-        image: mariadb:latest
-        depends_on:
-            - primary1
-        environment:
-            MYSQL_ALLOW_EMPTY_PASSWORD: 'Y'
-        volumes:
-            - ./sql/replica:/docker-entrypoint-initdb.d
-        command: mysqld --log-bin=mariadb-bin --binlog-format=ROW --server-id=3002 --log-slave-updates
-        ports:
-            - "4003:3306"
-
     maxscale:
         image: mariadb/maxscale:latest
         depends_on:
             - primary1
             - primary2
-            - replica1
         volumes:
             - ./maxscale.cnf.d:/etc/maxscale.cnf.d
         ports:
