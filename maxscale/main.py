@@ -19,7 +19,7 @@ def connect_to_db(db_name):
     con = mysql.connector.connect(
         user = 'maxuser',
         password = 'maxpwd',
-        host = '172.18.0.5',
+        host = '172.18.0.4',
         database = db_name,
         port = '4006'
     )

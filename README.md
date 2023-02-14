@@ -22,16 +22,64 @@ sudo apt install python3-pip
 pip3 install mysql-connector
 ```
 
+**BEFORE PROCEEDING**: The MaxScale container must have been created before running the following command. Skip to the [MaxScale Docker-Compose Setup](https://github.com/6ri4n/maxscale-docker#maxscale-docker-compose-setup) section and return to step 1 once you have the Docker-Compose up.
+
+Editing the Python script to contain the correct ip address of the MaxScale container:
+1. Identifying the ip address of the MaxScale container:
+```
+docker inspect maxscale_maxscale_1
+```
+
+A JSON object will be returned, here's part of it:
+```
+"maxscale_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "223e917119b5",
+                        "maxscale"
+                    ],
+                    "NetworkID": "63196d15cb1a34715db7897067b7432b52e172961fc7929df850159ebe52144d",
+                    "EndpointID": "019f17c980d55f6a7f4ec07750b12e46804a99a5d0dbf1f323d06f1a78bd17be",
+                    "Gateway": "172.18.0.1",
+                    "IPAddress": "172.18.0.4",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:12:00:05",
+                    "DriverOpts": null
+                }
+```
+
+2. Look for the following JSON property **"IPAddress": "172.18.0.4"** near the bottom and take note of the ip address. This is the IP address that you will edit into the Python script.
+
+3. Navigate to the [maxscale](./maxscale/) directory.
+
+4. Use a text editor (I'll be using nano) to edit the main.py file located in the current directory.
+```
+nano main.py
+```
+
+5. Go to line 22 (**host = '172.18.0.4',**) and check if the ip address matches with the ip address from step 2, if not please edit the ip address. The ip address should be within the single quotes. Save your changes and exit from the text editor (CTRL + O and CTRL + X).
+
+You can now [run](https://github.com/6ri4n/maxscale-docker#running) the Python script.
+
 ## MaxScale Docker-Compose Setup
 
 The [MaxScale docker-compose](./maxscale/docker-compose.yml) setup contains MaxScale
 configured with a three node primary-replica cluster. 
 
+## MaxScale Docker-Compose Setup
+
+The [MaxScale docker-compose](./maxscale/docker-compose.yml) setup contains MaxScale
+configured with a three node primary-primary cluster.
+
 **BEFORE PROCEEDING**: The following commands assume the user is in the docker group, if not, use "**sudo**" before each command.
 
-The following commands should be executed within [this directory](./maxscale/):
+The following commands should be executed within the [maxscale directory](./maxscale/):
 
-Starting MaxScale with its primary-replica cluster:
+Starting MaxScale with its primary-primary cluster:
 ```
 docker-compose up -d
 ```
@@ -42,11 +90,9 @@ $ docker-compose exec maxscale maxctrl list servers
 ┌─────────┬──────────┬──────┬─────────────┬─────────────────┬──────────┬─────────────────┐
 │ Server  │ Address  │ Port │ Connections │ State           │ GTID     │ Monitor         │
 ├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
-│ server1 │ primary  │ 3306 │ 0           │ Master, Running │ 0-3000-5 │ MariaDB-Monitor │
+│ server1 │ primary1 │ 3306 │ 0           │ Master, Running │ 0-3000-5 │ MariaDB-Monitor │
 ├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
-│ server2 │ replica1 │ 3306 │ 0           │ Slave, Running  │ 0-3000-5 │ MariaDB-Monitor │
-├─────────┼──────────┼──────┼─────────────┼─────────────────┼──────────┼─────────────────┤
-│ server3 │ replica2 │ 3306 │ 0           │ Slave, Running  │ 0-3000-5 │ MariaDB-Monitor │
+│ server2 │ primary2 │ 3306 │ 0           │ Running         │ 0-3001-5 │ MariaDB-Monitor │
 └─────────┴──────────┴──────┴─────────────┴─────────────────┴──────────┴─────────────────┘
 ```
 
@@ -61,7 +107,7 @@ docker-compose down -v
 
 The purpose of the Python script is to interact with and query the sharded database created using Docker Compose.
 
-The following command should be executed within [this directory](./maxscale/):
+The following command should be executed within the [maxscale directory](./maxscale/):
 
 Running the Python script:
 ```
