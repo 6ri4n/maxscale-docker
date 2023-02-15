@@ -28,6 +28,7 @@ services:
         volumes:
             - ./maxscale.cnf.d:/etc/maxscale.cnf.d
         ports:
+            - "4000:4000"  # shard service listener
             - "4006:4006"  # readwrite port
             - "4008:4008"  # readonly port
             - "8989:8989"  # REST API port

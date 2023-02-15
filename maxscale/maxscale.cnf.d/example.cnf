@@ -25,6 +25,19 @@ auto_failover=true
 auto_rejoin=true
 enforce_read_only_slaves=1
 
+[Sharded-Service]
+type=service
+router=schemarouter
+servers=server1,server2
+user=maxuser
+password=maxpwd
+
+[Sharded-Service-Listener]
+type=listener
+service=Sharded-Service
+protocol=MariaDBClient
+port=4000
+
 # Service definitions
 # Service Definition for a read-only service and a read/write splitting service.
 

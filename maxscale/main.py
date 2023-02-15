@@ -15,13 +15,12 @@
 import mysql.connector
 
 
-def connect_to_db(db_name):
+def connect_to_db():
     con = mysql.connector.connect(
         user = 'maxuser',
         password = 'maxpwd',
         host = '172.18.0.4',
-        database = db_name,
-        port = '4006'
+        port = '4000'
     )
     return con
 
@@ -34,37 +33,33 @@ def parse(data):
         print(row)
 
 def main():
-    zipcode_one_con = connect_to_db('zipcodes_one')
-    zipcode_one_cursor = zipcode_one_con.cursor()
-    zipcode_two_con = connect_to_db('zipcodes_two')
-    zipcode_two_cursor = zipcode_two_con.cursor()
+    zipcode_db_con = connect_to_db()
+    zipcode_db_cursor = zipcode_db_con.cursor()
 
     print('connection: started\n')
 
     print('1. Retrieve the last 10 rows of data from the zipcodes_one shard.\n')
-    query_statement = "SELECT * FROM zipcodes_one ORDER BY Zipcode DESC, Zipcode ASC LIMIT 10;"
-    retrieved_data = query(zipcode_one_cursor, query_statement).fetchall()
+    query_statement = "SELECT * FROM zipcodes_one.zipcodes_one ORDER BY Zipcode DESC, Zipcode ASC LIMIT 10;"
+    retrieved_data = query(zipcode_db_cursor, query_statement).fetchall()
     parse(sorted(retrieved_data, key = lambda x:x[0]))
 
     print('\n2. Retrieve the first 10 rows of data from the zipcodes_two shard.\n')
-    query_statement = "SELECT * FROM zipcodes_two ORDER BY Zipcode LIMIT 10;"
-    retrieved_data = query(zipcode_two_cursor, query_statement).fetchall()
+    query_statement = "SELECT * FROM zipcodes_two.zipcodes_two ORDER BY Zipcode LIMIT 10;"
+    retrieved_data = query(zipcode_db_cursor, query_statement).fetchall()
     parse(retrieved_data)
 
     print('\n3. Find the largest zipcode value in the zipcodes_one shard.\n')
-    query_statement = "SELECT MAX(zipcode) FROM zipcodes_one;"
-    retrieved_data = query(zipcode_one_cursor, query_statement).fetchall()
+    query_statement = "SELECT MAX(zipcode) FROM zipcodes_one.zipcodes_one;"
+    retrieved_data = query(zipcode_db_cursor, query_statement).fetchall()
     parse(retrieved_data)
 
     print('\n4. Find the smallest zipcode value in the zipcodes_two shard.\n')
-    query_statement = "SELECT MIN(zipcode) FROM zipcodes_two;"
-    retrieved_data = query(zipcode_two_cursor, query_statement).fetchall()
+    query_statement = "SELECT MIN(zipcode) FROM zipcodes_two.zipcodes_two;"
+    retrieved_data = query(zipcode_db_cursor, query_statement).fetchall()
     parse(retrieved_data)
 
-    zipcode_one_cursor.close()
-    zipcode_one_con.close()
-    zipcode_two_cursor.close()
-    zipcode_two_con.close()
+    zipcode_db_cursor.close()
+    zipcode_db_con.close()
 
     print('\nconnection: ended')
 
